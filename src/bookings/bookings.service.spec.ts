@@ -8,6 +8,9 @@ describe('BookingsService', () => {
   let prismaService: PrismaService;
 
   const mockPrismaService = {
+    user: {
+      findUnique: jest.fn(),
+    },
     artist: {
       findUnique: jest.fn(),
     },
@@ -52,6 +55,12 @@ describe('BookingsService', () => {
         time: '14:00',
       };
 
+      const user = {
+        id: userId,
+        name: 'Test User',
+        email: 'test@test.com',
+      };
+
       const artist = {
         id: 'artist-1',
         name: 'Carlos Silva',
@@ -68,6 +77,7 @@ describe('BookingsService', () => {
         updatedAt: new Date(),
       };
 
+      mockPrismaService.user.findUnique.mockResolvedValue(user);
       mockPrismaService.artist.findUnique.mockResolvedValue(artist);
       mockPrismaService.booking.create.mockResolvedValue(createdBooking);
 
@@ -88,6 +98,13 @@ describe('BookingsService', () => {
         time: '14:00',
       };
 
+      const user = {
+        id: userId,
+        name: 'Test User',
+        email: 'test@test.com',
+      };
+
+      mockPrismaService.user.findUnique.mockResolvedValue(user);
       mockPrismaService.artist.findUnique.mockResolvedValue(null);
 
       await expect(service.create(userId, createBookingDto)).rejects.toThrow(
@@ -105,6 +122,12 @@ describe('BookingsService', () => {
         time: '14:00',
       };
 
+      const user = {
+        id: userId,
+        name: 'Test User',
+        email: 'test@test.com',
+      };
+
       const artist = {
         id: 'artist-1',
         isActive: true,
@@ -112,9 +135,10 @@ describe('BookingsService', () => {
 
       const tattoo = {
         id: 'tattoo-1',
-        isActive: true,
+        isAvailable: true,
       };
 
+      mockPrismaService.user.findUnique.mockResolvedValue(user);
       mockPrismaService.artist.findUnique.mockResolvedValue(artist);
       mockPrismaService.tattoo.findUnique.mockResolvedValue(tattoo);
       mockPrismaService.booking.create.mockResolvedValue({

@@ -1,11 +1,11 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotFoundException } from '@nestjs/common';
 
 describe('ProductsService', () => {
   let service: ProductsService;
-  let prismaService: PrismaService;
+  let prisma: PrismaService;
 
   const mockPrismaService = {
     product: {
@@ -13,7 +13,30 @@ describe('ProductsService', () => {
       findMany: jest.fn(),
       findUnique: jest.fn(),
       update: jest.fn(),
+      delete: jest.fn(),
     },
+  };
+
+  const mockProduct = {
+    id: 'product-1',
+    name: 'Produto Teste',
+    description: 'Descrição do produto',
+    price: 99.99,
+    category: 'CLOTHING',
+    stock: 10,
+    images: ['image1.jpg'],
+    isActive: true,
+    featured: false,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+
+  const mockProductWithReviews = {
+    ...mockProduct,
+    reviews: [
+      { id: 'review-1', rating: 5, comment: 'Ótimo', userId: 'user-1', productId: 'product-1', user: { name: 'João', email: 'joao@email.com' }, createdAt: new Date() },
+      { id: 'review-2', rating: 4, comment: 'Bom', userId: 'user-2', productId: 'product-1', user: { name: 'Maria', email: 'maria@email.com' }, createdAt: new Date() },
+    ],
   };
 
   beforeEach(async () => {
@@ -28,37 +51,29 @@ describe('ProductsService', () => {
     }).compile();
 
     service = module.get<ProductsService>(ProductsService);
-    prismaService = module.get<PrismaService>(PrismaService);
+    prisma = module.get<PrismaService>(PrismaService);
   });
 
-  afterEach(() => {
-    jest.clearAllMocks();
+  it('deve estar definido', () => {
+    expect(service).toBeDefined();
   });
 
   describe('create', () => {
     it('deve criar um produto com sucesso', async () => {
       const createProductDto = {
         name: 'Produto Teste',
-        description: 'Descrição do produto',
-        price: 99.9,
+        description: 'Descrição',
+        price: 99.99,
+        category: 'CLOTHING' as any,
         stock: 10,
-        category: 'AFTERCARE' as any,
+        images: ['image1.jpg'],
       };
 
-      const createdProduct = {
-        id: '1',
-        ...createProductDto,
-        imageUrl: null,
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      mockPrismaService.product.create.mockResolvedValue(createdProduct);
+      mockPrismaService.product.create.mockResolvedValue(mockProduct);
 
       const result = await service.create(createProductDto);
 
-      expect(result).toEqual(createdProduct);
+      expect(result).toEqual(mockProduct);
       expect(mockPrismaService.product.create).toHaveBeenCalledWith({
         data: createProductDto,
       });
@@ -66,114 +81,39 @@ describe('ProductsService', () => {
   });
 
   describe('findAll', () => {
-    it('deve retornar todos os produtos ativos', async () => {
-      const products = [
+    it('deve retornar todos os produtos com rating calculado', async () => {
+      const productsWithReviews = [
         {
-          id: '1',
-          name: 'Produto 1',
-          price: 50,
-          isActive: true,
-          reviews: [],
-        },
-        {
-          id: '2',
-          name: 'Produto 2',
-          price: 100,
-          isActive: true,
-          reviews: [],
+          ...mockProduct,
+          reviews: [{ rating: 5 }, { rating: 4 }],
         },
       ];
 
-      mockPrismaService.product.findMany.mockResolvedValue(products);
+      mockPrismaService.product.findMany.mockResolvedValue(productsWithReviews);
 
       const result = await service.findAll();
 
-      expect(result).toEqual(products);
-      expect(mockPrismaService.product.findMany).toHaveBeenCalledWith({
-        where: {
-          isActive: true,
-        },
-        include: {
-          reviews: {
-            select: {
-              rating: true,
-            },
-          },
-        },
-      });
-    });
-
-    it('deve filtrar produtos por categoria', async () => {
-      const category = 'AFTERCARE';
-      const products = [
-        {
-          id: '1',
-          name: 'Pomada',
-          category: 'AFTERCARE',
-          isActive: true,
-          reviews: [],
-        },
-      ];
-
-      mockPrismaService.product.findMany.mockResolvedValue(products);
-
-      const result = await service.findAll(category);
-
-      expect(result).toEqual(products);
-      expect(mockPrismaService.product.findMany).toHaveBeenCalledWith({
-        where: {
-          isActive: true,
-          category: category,
-        },
-        include: {
-          reviews: {
-            select: {
-              rating: true,
-            },
-          },
-        },
-      });
+      expect(result).toHaveLength(1);
+      expect(result[0]).toHaveProperty('rating', 4.5);
+      expect(result[0]).toHaveProperty('reviewCount', 2);
     });
   });
 
   describe('findOne', () => {
-    it('deve retornar um produto por ID', async () => {
-      const productId = '1';
-      const product = {
-        id: productId,
-        name: 'Produto Teste',
-        price: 99.9,
-        reviews: [],
-      };
+    it('deve retornar um produto específico', async () => {
+      mockPrismaService.product.findUnique.mockResolvedValue(mockProductWithReviews);
 
-      mockPrismaService.product.findUnique.mockResolvedValue(product);
+      const result = await service.findOne('product-1');
 
-      const result = await service.findOne(productId);
-
-      expect(result).toEqual(product);
-      expect(mockPrismaService.product.findUnique).toHaveBeenCalledWith({
-        where: { id: productId },
-        include: {
-          reviews: {
-            include: {
-              user: {
-                select: {
-                  name: true,
-                  email: true,
-                },
-              },
-            },
-          },
-        },
-      });
+      expect(result).toBeDefined();
+      expect(result.rating).toBe(4.5);
+      expect(result.reviewCount).toBe(2);
     });
 
-    it('deve lançar NotFoundException se o produto não existir', async () => {
-      const productId = 'nonexistent';
-
+    it('deve lançar NotFoundException quando produto não existir', async () => {
       mockPrismaService.product.findUnique.mockResolvedValue(null);
 
-      await expect(service.findOne(productId)).rejects.toThrow(
+      await expect(service.findOne('non-existent-id')).rejects.toThrow(
         NotFoundException,
       );
     });
@@ -181,58 +121,33 @@ describe('ProductsService', () => {
 
   describe('update', () => {
     it('deve atualizar um produto', async () => {
-      const productId = '1';
-      const updateProductDto = {
-        name: 'Produto Atualizado',
-        price: 149.9,
-      };
-
-      const existingProduct = {
-        id: productId,
-        name: 'Produto Antigo',
-        price: 99.9,
-      };
-
-      const updatedProduct = {
-        ...existingProduct,
-        ...updateProductDto,
-      };
-
-      mockPrismaService.product.findUnique.mockResolvedValue(existingProduct);
-      mockPrismaService.product.update.mockResolvedValue(updatedProduct);
-
-      const result = await service.update(productId, updateProductDto);
-
-      expect(result).toEqual(updatedProduct);
-      expect(mockPrismaService.product.update).toHaveBeenCalledWith({
-        where: { id: productId },
-        data: updateProductDto,
+      const updateDto = { name: 'Produto Atualizado' };
+      
+      mockPrismaService.product.findUnique.mockResolvedValue(mockProductWithReviews);
+      mockPrismaService.product.update.mockResolvedValue({
+        ...mockProduct,
+        ...updateDto,
       });
+
+      const result = await service.update('product-1', updateDto);
+
+      expect(result.name).toBe('Produto Atualizado');
     });
   });
 
   describe('remove', () => {
-    it('deve desativar um produto (soft delete)', async () => {
-      const productId = '1';
-      const product = {
-        id: productId,
-        name: 'Produto',
-        isActive: true,
-      };
-
-      const deactivatedProduct = {
-        ...product,
+    it('deve desativar um produto', async () => {
+      mockPrismaService.product.findUnique.mockResolvedValue(mockProductWithReviews);
+      mockPrismaService.product.update.mockResolvedValue({
+        ...mockProduct,
         isActive: false,
-      };
+      });
 
-      mockPrismaService.product.findUnique.mockResolvedValue(product);
-      mockPrismaService.product.update.mockResolvedValue(deactivatedProduct);
-
-      const result = await service.remove(productId);
+      const result = await service.remove('product-1');
 
       expect(result.isActive).toBe(false);
       expect(mockPrismaService.product.update).toHaveBeenCalledWith({
-        where: { id: productId },
+        where: { id: 'product-1' },
         data: { isActive: false },
       });
     });

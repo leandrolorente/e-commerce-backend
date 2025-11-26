@@ -30,12 +30,20 @@ export class CreateProductDto {
   @Min(0)
   stock: number;
 
-  @IsEnum(ProductCategory)
-  category: ProductCategory;
+  @IsString()
+  category: string;
 
   @IsArray()
   @IsString({ each: true })
   images: string[];
+
+  @IsOptional()
+  @IsNumber()
+  rating?: number;
+
+  @IsOptional()
+  @IsNumber()
+  reviewCount?: number;
 
   @IsOptional()
   @IsObject()

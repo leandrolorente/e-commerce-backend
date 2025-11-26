@@ -11,13 +11,30 @@ export class BookingsService {
   constructor(private prisma: PrismaService) {}
 
   async create(userId: string, createBookingDto: CreateBookingDto) {
+    // Verificar se usuário existe
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new BadRequestException(
+        'Usuário não encontrado. Por favor, faça login novamente.',
+      );
+    }
+
     // Verificar se artista existe
     const artist = await this.prisma.artist.findUnique({
       where: { id: createBookingDto.artistId },
     });
 
-    if (!artist || !artist.isActive) {
-      throw new NotFoundException('Artista não encontrado');
+    if (!artist) {
+      throw new NotFoundException(
+        `Artista com ID "${createBookingDto.artistId}" não encontrado`,
+      );
+    }
+
+    if (!artist.isActive) {
+      throw new BadRequestException('Este artista não está mais ativo');
     }
 
     // Verificar se tatuagem existe (se fornecida)
@@ -26,22 +43,45 @@ export class BookingsService {
         where: { id: createBookingDto.tattooId },
       });
 
-      if (!tattoo || !tattoo.isAvailable) {
-        throw new NotFoundException('Tatuagem não encontrada');
+      if (!tattoo) {
+        throw new NotFoundException(
+          `Tatuagem com ID "${createBookingDto.tattooId}" não encontrada`,
+        );
+      }
+
+      if (!tattoo.isAvailable) {
+        throw new BadRequestException('Esta tatuagem não está mais disponível');
       }
     }
 
-    return this.prisma.booking.create({
-      data: {
-        ...createBookingDto,
-        userId,
-        date: new Date(createBookingDto.date),
-      },
-      include: {
-        artist: true,
-        tattoo: true,
-      },
-    });
+    try {
+      return await this.prisma.booking.create({
+        data: {
+          ...createBookingDto,
+          userId,
+          date: new Date(createBookingDto.date),
+        },
+        include: {
+          artist: true,
+          tattoo: true,
+          user: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              phone: true,
+            },
+          },
+        },
+      });
+    } catch (error) {
+      if (error.code === 'P2003') {
+        throw new BadRequestException(
+          'Erro ao criar agendamento: um ou mais IDs fornecidos são inválidos. Verifique o artistId e tattooId.',
+        );
+      }
+      throw error;
+    }
   }
 
   async findAll(userId?: string) {

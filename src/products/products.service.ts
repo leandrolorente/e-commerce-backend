@@ -8,8 +8,11 @@ export class ProductsService {
   constructor(private prisma: PrismaService) {}
 
   async create(createProductDto: CreateProductDto) {
+    // Remover campos calculados que não existem no schema
+    const { rating, reviewCount, ...productData } = createProductDto;
+    
     return this.prisma.product.create({
-      data: createProductDto,
+      data: productData as any,
     });
   }
 
@@ -84,9 +87,13 @@ export class ProductsService {
 
   async update(id: string, updateProductDto: UpdateProductDto) {
     await this.findOne(id);
+    
+    // Remover campos calculados que não existem no schema
+    const { rating, reviewCount, ...productData } = updateProductDto;
+    
     return this.prisma.product.update({
       where: { id },
-      data: updateProductDto,
+      data: productData as any,
     });
   }
 
