@@ -17,6 +17,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '@prisma/client';
 import { Public } from '../common/decorators/public.decorator';
+import type { RequestWithUser } from '../common/interfaces/request-with-user.interface';
 
 @Controller('bookings')
 export class BookingsController {
@@ -39,21 +40,21 @@ export class BookingsController {
 
   @UseGuards(JwtAuthGuard)
   @Get('my-bookings')
-  findMyBookings(@Request() req) {
+  findMyBookings(@Request() req: RequestWithUser) {
     return this.bookingsService.findAll(req.user.userId);
   }
 
   @UseGuards(JwtAuthGuard)
   @Post()
-  create(@Request() req, @Body() createBookingDto: CreateBookingDto) {
+  create(@Request() req: RequestWithUser, @Body() createBookingDto: CreateBookingDto) {
     return this.bookingsService.create(req.user.userId, createBookingDto);
   }
 
   @UseGuards(JwtAuthGuard)
   @Get()
-  findAll(@Request() req) {
+  findAll(@Request() req: RequestWithUser) {
     // Admin vê todos, usuário comum vê apenas seus agendamentos
-    const userId =
+    const userId: string | undefined =
       req.user.role === UserRole.ADMIN ? undefined : req.user.userId;
     return this.bookingsService.findAll(userId);
   }

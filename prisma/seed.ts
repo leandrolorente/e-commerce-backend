@@ -91,7 +91,7 @@ async function main() {
         description: 'Camiseta 100% algodão com logo exclusivo',
         price: 79.90,
         stock: 30,
-        category: ProductCategory.MERCHANDISE,
+        category: ProductCategory.CLOTHING,
         images: ['https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=500'],
         specifications: {
           material: '100% Algodão',
