@@ -33,6 +33,7 @@ async function main() {
       password: userPassword,
       name: 'Usuário Teste',
       phone: '(11) 98888-8888',
+      avatar: 'https://i.pravatar.cc/300?img=33',
       role: UserRole.USER,
     },
   });
@@ -69,15 +70,21 @@ async function main() {
   // Produtos
   await prisma.product.deleteMany({});
   
-  const products = await prisma.product.createMany({
+  await prisma.product.createMany({
     data: [
       {
         name: 'Pomada Cicatrizante Premium',
         description: 'Pomada especial para cicatrização de tatuagens com vitamina E',
         price: 45.90,
+        discountPrice: 39.90,
         stock: 50,
         category: ProductCategory.AFTERCARE,
-        imageUrl: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=500',
+        images: ['https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=500'],
+        specifications: {
+          peso: '50g',
+          ingredientes: 'Vitamina E, Aloe Vera, Manteiga de Karité',
+          validade: '24 meses',
+        },
       },
       {
         name: 'Camiseta GuaranaTatto Preta',
@@ -85,15 +92,21 @@ async function main() {
         price: 79.90,
         stock: 30,
         category: ProductCategory.MERCHANDISE,
-        imageUrl: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=500',
+        images: ['https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=500'],
+        specifications: {
+          material: '100% Algodão',
+          tamanhos: 'P, M, G, GG',
+          cor: 'Preta',
+        },
       },
       {
         name: 'Kit Cuidados Completo',
         description: 'Kit com pomada, sabonete neutro e protetor solar',
         price: 120.00,
+        discountPrice: 99.90,
         stock: 20,
         category: ProductCategory.AFTERCARE,
-        imageUrl: 'https://images.unsplash.com/photo-1556228841-b8e5c3e1f0b6?w=500',
+        images: ['https://images.unsplash.com/photo-1556228841-b8e5c3e1f0b6?w=500'],
       },
       {
         name: 'Vale Presente R$ 500',
@@ -101,7 +114,7 @@ async function main() {
         price: 500.00,
         stock: 100,
         category: ProductCategory.GIFT_CARD,
-        imageUrl: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=500',
+        images: ['https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=500'],
       },
     ],
   });
@@ -111,62 +124,126 @@ async function main() {
   // Tatuagens
   await prisma.tattoo.deleteMany({});
 
-  const tattoos = await prisma.tattoo.createMany({
+  await prisma.tattoo.createMany({
     data: [
       {
-        title: 'Leão Realista',
+        name: 'Leão Realista',
         description: 'Tatuagem de leão em estilo realista',
-        style: 'Realismo',
+        style: 'REALISTIC',
         bodyArea: BodyArea.BRACO,
-        size: 'Grande (15-20cm)',
-        price: 800.00,
-        imageUrl: 'https://images.unsplash.com/photo-1598371839696-5c5bb00bdc28?w=500',
-        duration: 240,
+        size: 'LARGE',
+        estimatedTime: '4h',
+        estimatedPrice: 800.00,
+        images: ['https://images.unsplash.com/photo-1598371839696-5c5bb00bdc28?w=500'],
+        artist: 'Carlos Silva',
+        difficulty: 'Expert',
+        tags: ['leão', 'realista', 'animal'],
+        colors: ['preto', 'cinza'],
+        isAvailable: true,
       },
       {
-        title: 'Rosa Old School',
+        name: 'Rosa Old School',
         description: 'Rosa tradicional estilo old school',
-        style: 'Old School',
+        style: 'TRADITIONAL',
         bodyArea: BodyArea.ANTEBRACO,
-        size: 'Média (10-15cm)',
-        price: 450.00,
-        imageUrl: 'https://images.unsplash.com/photo-1611501275019-9b5cda994e3d?w=500',
-        duration: 120,
+        size: 'MEDIUM',
+        estimatedTime: '2h',
+        estimatedPrice: 450.00,
+        images: ['https://images.unsplash.com/photo-1611501275019-9b5cda994e3d?w=500'],
+        artist: 'Ana Costa',
+        difficulty: 'Intermediate',
+        tags: ['rosa', 'old school', 'flor'],
+        colors: ['vermelho', 'verde', 'preto'],
+        isAvailable: true,
       },
       {
-        title: 'Mandala Geométrica',
+        name: 'Mandala Geométrica',
         description: 'Mandala com padrões geométricos',
-        style: 'Geométrico',
+        style: 'GEOMETRIC',
         bodyArea: BodyArea.COSTAS,
-        size: 'Grande (20-30cm)',
-        price: 1200.00,
-        imageUrl: 'https://images.unsplash.com/photo-1590246814883-57c511eecaa7?w=500',
-        duration: 300,
+        size: 'LARGE',
+        estimatedTime: '5h',
+        estimatedPrice: 1200.00,
+        images: ['https://images.unsplash.com/photo-1590246814883-57c511eecaa7?w=500'],
+        artist: 'Carlos Silva',
+        difficulty: 'Expert',
+        tags: ['mandala', 'geométrico', 'simetria'],
+        colors: ['preto'],
+        isAvailable: true,
       },
       {
-        title: 'Flor de Lótus Minimalista',
+        name: 'Flor de Lótus Minimalista',
         description: 'Flor de lótus em linhas finas',
-        style: 'Minimalista',
+        style: 'MINIMALIST',
         bodyArea: BodyArea.PE,
-        size: 'Pequena (5-10cm)',
-        price: 250.00,
-        imageUrl: 'https://images.unsplash.com/photo-1565058505949-e353d6fab1b1?w=500',
-        duration: 60,
+        size: 'SMALL',
+        estimatedTime: '1h',
+        estimatedPrice: 250.00,
+        images: ['https://images.unsplash.com/photo-1565058505949-e353d6fab1b1?w=500'],
+        artist: 'Ana Costa',
+        difficulty: 'Beginner',
+        tags: ['lótus', 'minimalista', 'flor', 'delicada'],
+        colors: ['preto'],
+        isAvailable: true,
       },
       {
-        title: 'Dragão Oriental',
+        name: 'Dragão Oriental',
         description: 'Dragão japonês colorido',
-        style: 'Oriental',
+        style: 'ORIENTAL',
         bodyArea: BodyArea.COXA,
-        size: 'Extra Grande (30cm+)',
-        price: 2000.00,
-        imageUrl: 'https://images.unsplash.com/photo-1568515387631-8d5e4bf3c3b6?w=500',
-        duration: 480,
+        size: 'XLARGE',
+        estimatedTime: '8h',
+        estimatedPrice: 2000.00,
+        images: ['https://images.unsplash.com/photo-1568515387631-8d5e4bf3c3b6?w=500'],
+        artist: 'Carlos Silva',
+        difficulty: 'Expert',
+        tags: ['dragão', 'oriental', 'japonês', 'colorido'],
+        colors: ['vermelho', 'preto', 'dourado', 'verde'],
+        isAvailable: true,
       },
     ],
   });
 
   console.log('✅ Tatuagens criadas');
+
+  // Reviews
+  await prisma.review.deleteMany({});
+
+  const [products, tattoos] = await Promise.all([
+    prisma.product.findMany({ take: 2 }),
+    prisma.tattoo.findMany({ take: 2 }),
+  ]);
+
+  if (products.length > 0 && tattoos.length > 0) {
+    await prisma.review.createMany({
+      data: [
+        {
+          userId: user.id,
+          productId: products[0].id,
+          rating: 5,
+          comment: 'Produto excelente! Ajudou muito na cicatrização da minha tattoo.',
+          service: 'Pomada Cicatrizante',
+        },
+        {
+          userId: user.id,
+          tattooId: tattoos[0].id,
+          rating: 5,
+          comment: 'Trabalho incrível! O Carlos é um artista de verdade, super recomendo!',
+          service: 'Tatuagem Realista',
+        },
+        {
+          userId: user.id,
+          productId: products[1]?.id,
+          rating: 4,
+          comment: 'Ótima qualidade, entrega rápida!',
+          service: 'Camiseta',
+        },
+      ],
+    });
+
+    console.log('✅ Reviews criadas');
+  }
+
   console.log('');
   console.log('🎉 Seed executado com sucesso!');
   console.log('');

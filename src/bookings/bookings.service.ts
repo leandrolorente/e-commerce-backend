@@ -26,7 +26,7 @@ export class BookingsService {
         where: { id: createBookingDto.tattooId },
       });
 
-      if (!tattoo || !tattoo.isActive) {
+      if (!tattoo || !tattoo.isAvailable) {
         throw new NotFoundException('Tatuagem não encontrada');
       }
     }
@@ -104,5 +104,82 @@ export class BookingsService {
     return this.prisma.booking.delete({
       where: { id },
     });
+  }
+
+  async findAllArtists() {
+    return this.prisma.artist.findMany({
+      where: {
+        isActive: true,
+      },
+      orderBy: {
+        name: 'asc',
+      },
+    });
+  }
+
+  async getAvailableSlots(artistId: string, date: string) {
+    if (!artistId || !date) {
+      throw new BadRequestException('artistId e date são obrigatórios');
+    }
+
+    // Verificar se artista existe
+    const artist = await this.prisma.artist.findUnique({
+      where: { id: artistId },
+    });
+
+    if (!artist || !artist.isActive) {
+      throw new NotFoundException('Artista não encontrado');
+    }
+
+    // Buscar agendamentos existentes para o dia
+    const targetDate = new Date(date);
+    const startOfDay = new Date(targetDate.setHours(0, 0, 0, 0));
+    const endOfDay = new Date(targetDate.setHours(23, 59, 59, 999));
+
+    const existingBookings = await this.prisma.booking.findMany({
+      where: {
+        artistId,
+        date: {
+          gte: startOfDay,
+          lte: endOfDay,
+        },
+        status: {
+          in: ['PENDING', 'CONFIRMED'],
+        },
+      },
+      select: {
+        date: true,
+      },
+    });
+
+    // Horários de trabalho: 9h às 18h
+    const workingHours = [
+      '09:00',
+      '10:00',
+      '11:00',
+      '12:00',
+      '13:00',
+      '14:00',
+      '15:00',
+      '16:00',
+      '17:00',
+    ];
+
+    const bookedHours = existingBookings.map((booking) => {
+      const hour = booking.date.getHours();
+      const minutes = booking.date.getMinutes();
+      return `${hour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+    });
+
+    const availableSlots = workingHours.filter(
+      (slot) => !bookedHours.includes(slot),
+    );
+
+    return {
+      artistId,
+      date,
+      availableSlots,
+      bookedSlots: bookedHours,
+    };
   }
 }

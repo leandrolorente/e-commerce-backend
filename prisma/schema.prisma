@@ -67,6 +67,7 @@ model User {
   password  String
   name      String
   phone     String?
+  avatar    String?  // Para customerPhoto em testimonials
   role      UserRole @default(USER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -79,16 +80,18 @@ model User {
 }
 
 model Product {
-  id          String          @id @default(uuid())
-  name        String
-  description String
-  price       Float
-  stock       Int             @default(0)
-  category    ProductCategory
-  imageUrl    String?
-  isActive    Boolean         @default(true)
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
+  id             String          @id @default(uuid())
+  name           String
+  description    String
+  price          Float
+  discountPrice  Float?          // Preço com desconto
+  stock          Int             @default(0)
+  category       ProductCategory
+  images         String[]        // Array de URLs de imagens
+  specifications Json?           // Especificações técnicas
+  isActive       Boolean         @default(true)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 
   orderItems OrderItem[]
   reviews    Review[]
@@ -97,18 +100,22 @@ model Product {
 }
 
 model Tattoo {
-  id          String   @id @default(uuid())
-  title       String
-  description String?
-  style       String
-  bodyArea    BodyArea
-  size        String
-  price       Float
-  imageUrl    String
-  duration    Int // minutos
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String   @id @default(uuid())
+  name           String   // Renomeado de title
+  description    String?
+  images         String[] // Array de URLs (antes era imageUrl)
+  bodyArea       BodyArea
+  style          String   // Ex: TRADITIONAL, REALISTIC, TRIBAL
+  size           String   // Ex: SMALL, MEDIUM, LARGE
+  estimatedTime  String   // Ex: "8h" (antes era duration em minutos)
+  estimatedPrice Float    // Preço estimado (antes era price)
+  artist         String   // Nome do artista (string simples)
+  difficulty     String   // Ex: Beginner, Intermediate, Expert
+  tags           String[] // Tags para busca
+  colors         String[] // Cores utilizadas
+  isAvailable    Boolean  @default(true) // Renomeado de isActive
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   bookings Booking[]
   reviews  Review[]
@@ -201,8 +208,9 @@ model Review {
   userId    String
   productId String?
   tattooId  String?
-  rating    Int // 1-5
+  rating    Int      // 1-5
   comment   String?
+  service   String?  // Tipo de serviço/produto para testimonials
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

@@ -3,9 +3,11 @@ import {
   IsString,
   IsNumber,
   IsOptional,
+  IsEnum,
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { OrderStatus } from '@prisma/client';
 
 export class OrderItemDto {
   @IsString()
@@ -23,6 +25,16 @@ export class CreateOrderDto {
   @ValidateNested({ each: true })
   @Type(() => OrderItemDto)
   items: OrderItemDto[];
+
+  @IsOptional()
+  @IsString()
+  shippingAddress?: string;
+}
+
+export class UpdateOrderDto {
+  @IsOptional()
+  @IsEnum(OrderStatus)
+  status?: OrderStatus;
 
   @IsOptional()
   @IsString()

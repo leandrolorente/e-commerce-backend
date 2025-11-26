@@ -32,8 +32,15 @@ export class TattoosController {
   findAll(
     @Query('style') style?: string,
     @Query('bodyArea') bodyArea?: string,
+    @Query('featured') featured?: string,
+    @Query('limit') limit?: string,
   ) {
-    return this.tattoosService.findAll(style, bodyArea);
+    return this.tattoosService.findAll(
+      style,
+      bodyArea,
+      featured === 'true',
+      limit ? parseInt(limit) : undefined,
+    );
   }
 
   @Get(':id')

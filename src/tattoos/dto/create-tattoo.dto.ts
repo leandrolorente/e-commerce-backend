@@ -4,39 +4,54 @@ import {
   IsEnum,
   IsOptional,
   IsBoolean,
+  IsArray,
   Min,
 } from 'class-validator';
 import { BodyArea } from '@prisma/client';
 
 export class CreateTattooDto {
   @IsString()
-  title: string;
+  name: string;
 
   @IsOptional()
   @IsString()
   description?: string;
 
-  @IsString()
-  style: string;
+  @IsArray()
+  @IsString({ each: true })
+  images: string[];
 
   @IsEnum(BodyArea)
   bodyArea: BodyArea;
 
   @IsString()
-  size: string;
-
-  @IsNumber()
-  @Min(0)
-  price: number;
+  style: string;
 
   @IsString()
-  imageUrl: string;
+  size: string;
+
+  @IsString()
+  estimatedTime: string;
 
   @IsNumber()
   @Min(0)
-  duration: number;
+  estimatedPrice: number;
+
+  @IsString()
+  artist: string;
+
+  @IsString()
+  difficulty: string;
+
+  @IsArray()
+  @IsString({ each: true })
+  tags: string[];
+
+  @IsArray()
+  @IsString({ each: true })
+  colors: string[];
 
   @IsOptional()
   @IsBoolean()
-  isActive?: boolean;
+  isAvailable?: boolean;
 }

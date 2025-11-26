@@ -13,10 +13,15 @@ export class TattoosService {
     });
   }
 
-  async findAll(style?: string, bodyArea?: string) {
+  async findAll(
+    style?: string,
+    bodyArea?: string,
+    featured?: boolean,
+    limit?: number,
+  ) {
     return this.prisma.tattoo.findMany({
       where: {
-        isActive: true,
+        isAvailable: true,
         ...(style && { style: { contains: style, mode: 'insensitive' } }),
         ...(bodyArea && { bodyArea: bodyArea as any }),
       },
@@ -27,6 +32,8 @@ export class TattoosService {
           },
         },
       },
+      orderBy: featured ? { createdAt: 'desc' } : undefined,
+      take: limit,
     });
   }
 
@@ -65,7 +72,7 @@ export class TattoosService {
     await this.findOne(id);
     return this.prisma.tattoo.update({
       where: { id },
-      data: { isActive: false },
+      data: { isAvailable: false },
     });
   }
 }

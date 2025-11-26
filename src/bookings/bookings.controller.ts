@@ -8,6 +8,7 @@ import {
   Delete,
   UseGuards,
   Request,
+  Query,
 } from '@nestjs/common';
 import { BookingsService } from './bookings.service';
 import { CreateBookingDto, UpdateBookingDto } from './dto/booking.dto';
@@ -15,17 +16,40 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '@prisma/client';
+import { Public } from '../common/decorators/public.decorator';
 
 @Controller('bookings')
-@UseGuards(JwtAuthGuard)
 export class BookingsController {
   constructor(private readonly bookingsService: BookingsService) {}
 
+  @Public()
+  @Get('artists')
+  findAllArtists() {
+    return this.bookingsService.findAllArtists();
+  }
+
+  @Public()
+  @Get('available-slots')
+  getAvailableSlots(
+    @Query('artistId') artistId: string,
+    @Query('date') date: string,
+  ) {
+    return this.bookingsService.getAvailableSlots(artistId, date);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('my-bookings')
+  findMyBookings(@Request() req) {
+    return this.bookingsService.findAll(req.user.userId);
+  }
+
+  @UseGuards(JwtAuthGuard)
   @Post()
   create(@Request() req, @Body() createBookingDto: CreateBookingDto) {
     return this.bookingsService.create(req.user.userId, createBookingDto);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get()
   findAll(@Request() req) {
     // Admin vê todos, usuário comum vê apenas seus agendamentos
