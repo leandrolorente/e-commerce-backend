@@ -1,0 +1,214 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ENUMS
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+  REFUNDED
+}
+
+enum ProductCategory {
+  AFTERCARE
+  MERCHANDISE
+  GIFT_CARD
+  EQUIPMENT
+}
+
+enum BodyArea {
+  BRACO
+  ANTEBRACO
+  OMBRO
+  PEITO
+  COSTAS
+  ABDOMEN
+  COXA
+  PANTURRILHA
+  PE
+  MAO
+  PESCOCO
+  NUCA
+  ROSTO
+}
+
+// MODELOS
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  name      String
+  phone     String?
+  role      UserRole @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orders   Order[]
+  bookings Booking[]
+  reviews  Review[]
+
+  @@map("users")
+}
+
+model Product {
+  id          String          @id @default(uuid())
+  name        String
+  description String
+  price       Float
+  stock       Int             @default(0)
+  category    ProductCategory
+  imageUrl    String?
+  isActive    Boolean         @default(true)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  orderItems OrderItem[]
+  reviews    Review[]
+
+  @@map("products")
+}
+
+model Tattoo {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  style       String
+  bodyArea    BodyArea
+  size        String
+  price       Float
+  imageUrl    String
+  duration    Int // minutos
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  bookings Booking[]
+  reviews  Review[]
+
+  @@map("tattoos")
+}
+
+model Artist {
+  id          String   @id @default(uuid())
+  name        String
+  bio         String?
+  specialty   String?
+  imageUrl    String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  bookings Booking[]
+
+  @@map("artists")
+}
+
+model Booking {
+  id        String        @id @default(uuid())
+  userId    String
+  artistId  String
+  tattooId  String?
+  service   String // "NOVA_TATUAGEM" | "RETOQUE" | "CONSULTA" | "COVER_UP"
+  date      DateTime
+  time      String
+  status    BookingStatus @default(PENDING)
+  notes     String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  user   User    @relation(fields: [userId], references: [id])
+  artist Artist  @relation(fields: [artistId], references: [id])
+  tattoo Tattoo? @relation(fields: [tattooId], references: [id])
+
+  @@map("bookings")
+}
+
+model Order {
+  id              String      @id @default(uuid())
+  userId          String
+  total           Float
+  status          OrderStatus @default(PENDING)
+  shippingAddress String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  user    User        @relation(fields: [userId], references: [id])
+  items   OrderItem[]
+  payment Payment?
+
+  @@map("orders")
+}
+
+model OrderItem {
+  id        String @id @default(uuid())
+  orderId   String
+  productId String
+  quantity  Int
+  price     Float // preço no momento da compra
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id])
+
+  @@map("order_items")
+}
+
+model Payment {
+  id                 String        @id @default(uuid())
+  orderId            String        @unique
+  amount             Float
+  status             PaymentStatus @default(PENDING)
+  paymentMethod      String? // "credit_card" | "pix" | "boleto"
+  mercadoPagoId      String?       @unique
+  mercadoPagoStatus  String?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id])
+
+  @@map("payments")
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  userId    String
+  productId String?
+  tattooId  String?
+  rating    Int // 1-5
+  comment   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user    User     @relation(fields: [userId], references: [id])
+  product Product? @relation(fields: [productId], references: [id])
+  tattoo  Tattoo?  @relation(fields: [tattooId], references: [id])
+
+  @@map("reviews")
+}
