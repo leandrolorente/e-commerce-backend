@@ -5,7 +5,10 @@ import * as sgMail from '@sendgrid/mail';
 @Injectable()
 export class EmailService {
   constructor(private configService: ConfigService) {
-    sgMail.setApiKey(this.configService.get('SENDGRID_API_KEY'));
+    const apiKey = this.configService.get<string>('SENDGRID_API_KEY');
+    if (apiKey) {
+      sgMail.setApiKey(apiKey);
+    }
   }
 
   async sendBookingConfirmation(to: string, bookingData: any) {
@@ -46,9 +49,13 @@ export class EmailService {
         
         <h2>Itens do Pedido:</h2>
         <ul>
-          ${orderData.items.map((item: any) => `
+          ${orderData.items
+            .map(
+              (item: any) => `
             <li>${item.name} - Qtd: ${item.quantity} - R$ ${item.price}</li>
-          `).join('')}
+          `,
+            )
+            .join('')}
         </ul>
         
         <p><strong>Total:</strong> R$ ${orderData.total}</p>
@@ -63,7 +70,7 @@ export class EmailService {
 
   async sendPasswordReset(to: string, resetToken: string) {
     const resetUrl = `${this.configService.get('FRONTEND_URL')}/reset-password?token=${resetToken}`;
-    
+
     const msg = {
       to,
       from: this.configService.get('SENDGRID_FROM_EMAIL'),

@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { TattoosService } from './tattoos.service';
 import { CreateTattooDto } from './dto/create-tattoo.dto';
 import { UpdateTattooDto } from './dto/update-tattoo.dto';

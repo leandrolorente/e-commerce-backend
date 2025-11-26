@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Param, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -17,7 +25,8 @@ export class OrdersController {
   @Get()
   findAll(@Request() req) {
     // Admin vê todos, usuário comum vê apenas seus pedidos
-    const userId = req.user.role === UserRole.ADMIN ? undefined : req.user.userId;
+    const userId =
+      req.user.role === UserRole.ADMIN ? undefined : req.user.userId;
     return this.ordersService.findAll(userId);
   }
 

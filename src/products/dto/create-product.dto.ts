@@ -1,4 +1,11 @@
-import { IsString, IsNumber, IsEnum, IsOptional, IsBoolean, Min } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsEnum,
+  IsOptional,
+  IsBoolean,
+  Min,
+} from 'class-validator';
 import { ProductCategory } from '@prisma/client';
 
 export class CreateProductDto {

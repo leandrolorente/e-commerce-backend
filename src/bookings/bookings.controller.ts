@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Request,
+} from '@nestjs/common';
 import { BookingsService } from './bookings.service';
 import { CreateBookingDto, UpdateBookingDto } from './dto/booking.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -19,7 +29,8 @@ export class BookingsController {
   @Get()
   findAll(@Request() req) {
     // Admin vê todos, usuário comum vê apenas seus agendamentos
-    const userId = req.user.role === UserRole.ADMIN ? undefined : req.user.userId;
+    const userId =
+      req.user.role === UserRole.ADMIN ? undefined : req.user.userId;
     return this.bookingsService.findAll(userId);
   }
 

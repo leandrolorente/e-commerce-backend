@@ -1,4 +1,11 @@
-import { Controller, Post, UseInterceptors, UploadedFile, UseGuards, BadRequestException } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  UseInterceptors,
+  UploadedFile,
+  UseGuards,
+  BadRequestException,
+} from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { UploadService } from './upload.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -16,7 +23,7 @@ export class UploadController {
     }
 
     const result = await this.uploadService.uploadImage(file);
-    
+
     return {
       url: result.secure_url,
       publicId: result.public_id,

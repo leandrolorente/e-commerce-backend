@@ -1,17 +1,25 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
-import mercadopago from 'mercadopago';
+import { MercadoPagoConfig, Preference, Payment } from 'mercadopago';
+import { PaymentStatus } from '@prisma/client';
 
 @Injectable()
 export class PaymentsService {
+  private client: MercadoPagoConfig;
+  private preferenceClient: Preference;
+  private paymentClient: Payment;
+
   constructor(
     private prisma: PrismaService,
     private configService: ConfigService,
   ) {
-    mercadopago.configure({
-      access_token: this.configService.get('MERCADOPAGO_ACCESS_TOKEN'),
+    this.client = new MercadoPagoConfig({
+      accessToken:
+        this.configService.get<string>('MERCADOPAGO_ACCESS_TOKEN') || '',
     });
+    this.preferenceClient = new Preference(this.client);
+    this.paymentClient = new Payment(this.client);
   }
 
   async createPayment(orderId: string) {
@@ -27,15 +35,20 @@ export class PaymentsService {
       },
     });
 
+    if (!order) {
+      throw new Error('Order not found');
+    }
+
     const preference = {
       items: order.items.map((item) => ({
+        id: item.productId,
         title: item.product.name,
-        unit_price: item.price,
+        unit_price: Number(item.price),
         quantity: item.quantity,
       })),
       payer: {
         email: order.user.email,
-        name: order.user.name,
+        name: order.user.name || undefined,
       },
       back_urls: {
         success: `${this.configService.get('FRONTEND_URL')}/orders/${orderId}/success`,
@@ -47,52 +60,52 @@ export class PaymentsService {
       external_reference: orderId,
     };
 
-    const response = await mercadopago.preferences.create(preference);
+    const response = await this.preferenceClient.create({ body: preference });
 
     await this.prisma.payment.create({
       data: {
         orderId,
         amount: order.total,
-        mercadoPagoId: response.body.id,
+        mercadoPagoId: response.id || '',
       },
     });
 
     return {
-      preferenceId: response.body.id,
-      initPoint: response.body.init_point,
+      preferenceId: response.id,
+      initPoint: response.init_point,
     };
   }
 
   async handleWebhook(data: any) {
     if (data.type === 'payment') {
-      const payment = await mercadopago.payment.findById(data.data.id);
+      const payment = await this.paymentClient.get({ id: data.data.id });
 
       await this.prisma.payment.update({
-        where: { mercadoPagoId: payment.body.id.toString() },
+        where: { mercadoPagoId: payment.id?.toString() || '' },
         data: {
-          status: this.mapPaymentStatus(payment.body.status),
-          mercadoPagoStatus: payment.body.status,
-          paymentMethod: payment.body.payment_method_id,
+          status: this.mapPaymentStatus(payment.status || ''),
+          mercadoPagoStatus: payment.status || null,
+          paymentMethod: payment.payment_method_id || null,
         },
       });
 
-      if (payment.body.status === 'approved') {
+      if (payment.status === 'approved') {
         await this.prisma.order.update({
-          where: { id: payment.body.external_reference },
+          where: { id: payment.external_reference || '' },
           data: { status: 'PROCESSING' },
         });
       }
     }
   }
 
-  private mapPaymentStatus(mercadopagoStatus: string): string {
-    const statusMap: Record<string, string> = {
-      approved: 'APPROVED',
-      pending: 'PENDING',
-      rejected: 'REJECTED',
-      cancelled: 'CANCELLED',
-      refunded: 'REFUNDED',
+  private mapPaymentStatus(mercadopagoStatus: string): PaymentStatus {
+    const statusMap: Record<string, PaymentStatus> = {
+      approved: PaymentStatus.APPROVED,
+      pending: PaymentStatus.PENDING,
+      rejected: PaymentStatus.REJECTED,
+      cancelled: PaymentStatus.CANCELLED,
+      refunded: PaymentStatus.REFUNDED,
     };
-    return statusMap[mercadopagoStatus] || 'PENDING';
+    return statusMap[mercadopagoStatus] || PaymentStatus.PENDING;
   }
 }
