@@ -18,6 +18,12 @@ npx prisma generate --schema=./prisma/schema.prisma
 echo "🔄 Executando migrations..."
 npx prisma migrate deploy --schema=./prisma/schema.prisma
 
+# Se não houver migrations, criar schema diretamente
+if [ $? -ne 0 ]; then
+  echo "⚠️  Migrate falhou, tentando db push..."
+  npx prisma db push --schema=./prisma/schema.prisma --accept-data-loss
+fi
+
 echo "🚀 Iniciando servidor..."
 # Try both possible locations for main.js
 if [ -f "dist/src/main.js" ]; then
