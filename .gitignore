@@ -14,8 +14,7 @@ dist/
 build/
 *.tsbuildinfo
 
-# Prisma
-prisma/migrations/
+# Prisma - apenas ignora arquivos temporários, mantém migrations
 *.db
 *.db-journal
 
