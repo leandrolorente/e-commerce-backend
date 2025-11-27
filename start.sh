@@ -13,13 +13,10 @@ if [ -z "$JWT_SECRET" ]; then
 fi
 
 echo "📦 Gerando Prisma Client..."
-npx prisma generate
+npx prisma generate --schema=./prisma/schema.prisma
 
 echo "🔄 Executando migrations..."
-npx prisma migrate deploy
-
-echo "🌱 Executando seed (se existir)..."
-npm run prisma:seed || echo "Sem seed configurado, continuando..."
+npx prisma migrate deploy --schema=./prisma/schema.prisma
 
 echo "🚀 Iniciando servidor..."
 node dist/main
