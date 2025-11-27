@@ -9,14 +9,20 @@ RUN apk add --no-cache openssl libc6-compat python3 make g++
 # Copy package files first
 COPY package*.json ./
 
+# Copy Prisma schema BEFORE npm install (needed for postinstall hook)
+COPY prisma ./prisma/
+
+# Verify prisma schema was copied
+RUN ls -la prisma/ && cat prisma/schema.prisma | head -n 20
+
 # Install ALL dependencies (dev + prod needed for build)
-RUN npm install
+RUN npm install --ignore-scripts
+
+# Generate Prisma Client manually
+RUN npx prisma generate
 
 # Copy everything except what's in dockerignore
 COPY . .
-
-# Generate Prisma Client
-RUN npx prisma generate
 
 # Build NestJS application
 RUN npm run build
@@ -38,8 +44,14 @@ COPY package*.json ./
 # Copy Prisma schema BEFORE npm install (needed for postinstall hook)
 COPY prisma ./prisma/
 
-# Install ONLY production dependencies
-RUN npm ci --only=production --omit=dev
+# Verify prisma schema exists
+RUN ls -la prisma/
+
+# Install ONLY production dependencies (skip postinstall for now)
+RUN npm ci --only=production --omit=dev --ignore-scripts
+
+# Generate Prisma Client manually
+RUN npx prisma generate
 
 # Copy built application from builder stage
 COPY --from=builder /app/dist ./dist
