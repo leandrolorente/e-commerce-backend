@@ -19,4 +19,13 @@ echo "🔄 Executando migrations..."
 npx prisma migrate deploy --schema=./prisma/schema.prisma
 
 echo "🚀 Iniciando servidor..."
-node dist/main
+# Try both possible locations for main.js
+if [ -f "dist/src/main.js" ]; then
+  node dist/src/main
+elif [ -f "dist/main.js" ]; then
+  node dist/main
+else
+  echo "ERROR: Não encontrei main.js!"
+  ls -la dist/
+  exit 1
+fi

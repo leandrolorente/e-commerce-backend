@@ -29,7 +29,7 @@ RUN echo "Starting NestJS build..." && npm run build && echo "Build finished!"
 
 # CRITICAL: Verify dist exists and show contents
 RUN if [ ! -d "dist" ]; then echo "ERROR: dist folder not created!"; exit 1; fi
-RUN echo "✅ Build complete! Contents of dist:" && ls -laR dist/
+RUN echo "✅ Build complete! Contents of dist:" && find dist -name "*.js" | head -20
 
 # Production stage
 FROM node:20-alpine
@@ -57,9 +57,10 @@ RUN npx prisma generate
 # Copy built application from builder stage
 COPY --from=builder /app/dist ./dist
 
-# CRITICAL: Verify dist was copied
-RUN if [ ! -f "dist/main.js" ]; then echo "ERROR: dist/main.js not found!"; ls -laR .; exit 1; fi
-RUN echo "✅ Production image - dist contents:" && ls -laR dist/
+# CRITICAL: Verify dist was copied  
+RUN echo "Checking for main.js..." && find dist -name "main.js" -o -name "main.*.js"
+RUN if [ ! -f "dist/src/main.js" ] && [ ! -f "dist/main.js" ]; then echo "ERROR: main.js not found!"; ls -la dist/; exit 1; fi
+RUN echo "✅ Production image - dist structure:" && ls -la dist/
 
 # Copy startup script
 COPY start.sh ./
