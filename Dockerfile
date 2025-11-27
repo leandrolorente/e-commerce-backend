@@ -25,10 +25,11 @@ RUN npx prisma generate
 COPY . .
 
 # Build NestJS application
-RUN npm run build
+RUN echo "Starting NestJS build..." && npm run build && echo "Build finished!"
 
-# List dist to verify build
-RUN echo "Build complete! Contents of dist:" && ls -la dist/
+# CRITICAL: Verify dist exists and show contents
+RUN if [ ! -d "dist" ]; then echo "ERROR: dist folder not created!"; exit 1; fi
+RUN echo "✅ Build complete! Contents of dist:" && ls -laR dist/
 
 # Production stage
 FROM node:20-alpine
@@ -55,6 +56,10 @@ RUN npx prisma generate
 
 # Copy built application from builder stage
 COPY --from=builder /app/dist ./dist
+
+# CRITICAL: Verify dist was copied
+RUN if [ ! -f "dist/main.js" ]; then echo "ERROR: dist/main.js not found!"; ls -laR .; exit 1; fi
+RUN echo "✅ Production image - dist contents:" && ls -laR dist/
 
 # Copy startup script
 COPY start.sh ./
