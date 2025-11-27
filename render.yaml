@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: guarana-tattoo-backend
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: npm run start:migrate:prod
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: guarana-tattoo-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGIN
+        value: https://seu-frontend.vercel.app
+
+databases:
+  - name: guarana-tattoo-db
+    databaseName: tattoo_db
+    user: tattoo_user
+    plan: free

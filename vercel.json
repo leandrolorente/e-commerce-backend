@@ -1,0 +1,22 @@
+# Vercel Configuration
+# Este arquivo é opcional - use apenas se for fazer deploy na Vercel
+
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "dist/main.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "dist/main.js",
+      "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"]
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  }
+}
